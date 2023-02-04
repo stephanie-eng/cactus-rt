@@ -10,6 +10,7 @@
 
 namespace cactus_rt {
 void App::RegisterThread(BaseThread& thread) {
+  thread.log_queue_ = &log_queue_;
   threads_.push_back(&thread);
 }
 
@@ -29,6 +30,7 @@ void App::Start() {
   auto start_monotonic_time_ns = NowNs();
   auto start_wall_time_ns = WallNowNs();
 
+  logger_.Start(start_monotonic_time_ns, start_wall_time_ns);
   for (auto* thread : threads_) {
     thread->Start(start_monotonic_time_ns, start_wall_time_ns);
   }

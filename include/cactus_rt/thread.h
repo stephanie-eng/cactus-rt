@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include <atomic>
+#include <boost/lockfree/queue.hpp>
 #include <climits>  // For PTHREAD_STACK_MIN
 #include <cstring>
 #include <stdexcept>
@@ -19,7 +20,7 @@ constexpr size_t kDefaultStackSize = 8 * 1024 * 1024;  // 8MB
 // Needed because the App needs to hold a list of threads that it can start them
 // automatically.  Have a templated thread won't work with that system.
 class BaseThread {
-  std::atomic_bool stop_requested_;
+  std::atomic_bool stop_requested_ = false;
 
  public:
   virtual const std::string& Name() = 0;
@@ -29,6 +30,8 @@ class BaseThread {
   virtual void RequestStop() noexcept {
     stop_requested_ = true;
   }
+
+  friend class App;
 
   // The constructors and destructors are needed because we need to delete
   // objects of type BaseThread polymorphically, through the map in the App class.
@@ -46,6 +49,18 @@ class BaseThread {
   BaseThread& operator=(BaseThread&&) noexcept = delete;
 
  protected:
+  boost::lockfree::queue<const char*, boost::lockfree::capacity<1024>>* log_queue_;
+
+  /**
+   * @brief
+   *
+   * @return true if stop is requested
+   */
+  bool Log(const char* msg) const noexcept {
+    // TODO: verify behaviour when queue is full
+    return log_queue_->push(msg);
+  }
+
   /**
    * @brief Check if stop has been requested
    *

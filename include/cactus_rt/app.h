@@ -1,11 +1,13 @@
 #ifndef CACTUS_RT_APP2_H_
 #define CACTUS_RT_APP2_H_
 
+#include <boost/lockfree/queue.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
 
+#include "background_threads/logger.h"
 #include "thread.h"
 
 namespace cactus_rt {
@@ -15,8 +17,11 @@ class App {
    */
   size_t heap_size_;
 
+  boost::lockfree::queue<const char*, boost::lockfree::capacity<1024>> log_queue_;
+
   // Non-owning references to threads just to help with starting and joining the thrad.
-  std::vector<BaseThread*> threads_;
+  std::vector<BaseThread*>   threads_;
+  background_threads::Logger logger_;
 
  public:
   /**
@@ -25,7 +30,9 @@ class App {
    *
    * @param heap_size The heap size to reserve in bytes. Defaults to 512MB.
    */
-  explicit App(size_t heap_size = 512 * 1024 * 1024) : heap_size_(heap_size) {}
+  explicit App(size_t heap_size = 512 * 1024 * 1024) : heap_size_(heap_size) {
+    logger_.log_queue_ = &log_queue_;
+  }
   virtual ~App() = default;
 
   // Copy constructors

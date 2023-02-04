@@ -11,6 +11,7 @@ add_definitions(-DSPDLOG_ACTIVE_LEVEL=1) # debug level
 # https://stackoverflow.com/questions/5395309/how-do-i-force-cmake-to-include-pthread-option-during-compilation
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+find_package(Boost COMPONENTS lockfree)
 find_package(Threads REQUIRED)
 find_package(spdlog REQUIRED)
 
@@ -18,6 +19,7 @@ add_library(cactus_rt
   STATIC
   src/app.cc
   src/latency_tracker.cc
+  src/background_threads/logger.cc
 )
 
 target_compile_features(cactus_rt
@@ -34,6 +36,7 @@ target_link_libraries(cactus_rt
   PRIVATE
   Threads::Threads
   spdlog::spdlog
+  ${Boost_LOCKFREE_LIBRARY}
 )
 
 target_compile_options(cactus_rt

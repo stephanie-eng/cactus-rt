@@ -1,5 +1,5 @@
 add_executable(rt_logging_example
-  main.cc
+  src/main.cc
 )
 
 target_link_libraries(rt_logging_example
